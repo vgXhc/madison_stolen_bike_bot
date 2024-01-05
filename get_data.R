@@ -110,15 +110,12 @@ df %>%
 
 cat_names <- pluck(stolen_bikes, "bikes", 1) %>% unlist()
 
-get_colors <- function(x){
-  stolen_bikes %>% 
-    pluck("bikes", row_n, "frame_colors", x)
-}
+
 
 
 parse_bike_data <- function(row_n) {
-  stolen_bikes %>% 
-  bikes <- pluck("bikes", row_n) %>% 
+  bikes <- stolen_bikes %>% 
+  pluck("bikes", row_n) %>% 
     keep(names(.) %in% c("date_stolen",
     "frame_model",
     "manufacturer_name",
@@ -126,17 +123,38 @@ parse_bike_data <- function(row_n) {
     "thumb", 
     "title"))
   
-
-  no_of_colors <- stolen_bikes %>% 
-    pluck("bikes", row_n, "frame_colors") %>% 
+#determine how many color variables
+  no_of_colors <- stolen_bikes %>%
+    pluck("bikes", row_n, "frame_colors") %>%
     length()
-  colors <- map(1:no_of_colors, get_colors)
+  print(no_of_colors)
+#create column names  
+  create_column_names <- function(x){
+    paste("color", x, sep = "_")
+  }
   
-  c(bikes, colors[1])
+  column_names <- map_chr(1:no_of_colors, create_column_names)
+  
+  get_colors <- function(x){
+    stolen_bikes %>% 
+      pluck("bikes", row_n, "frame_colors", x)
+  }
+  
+  colors <- map(1:no_of_colors, get_colors)
+  names(colors) <- column_names
+  
+  print("bikes:")
+  print(bikes)
+  print(class(bikes))
+  print("colors:")
+  print(colors)
+  print(class(colors))
+  cbind(as.data.frame(bikes), as.data.frame(colors))
+#  bikes
   
 }
 
-parse_bike_data(1)
+parse_bike_data(2)
 
 all_bikes <- map_dfr(1:length(stolen_bikes$bikes), parse_bike_data)
 
